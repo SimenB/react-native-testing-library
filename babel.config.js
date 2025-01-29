@@ -1,22 +1,23 @@
 module.exports = {
   presets: [
-    '@babel/preset-typescript',
-    '@babel/preset-react',
     [
       '@babel/preset-env',
       {
         targets: {
-          node: '14',
+          node: '18',
         },
-        bugfixes: true,
+        useBuiltIns: false,
+        modules: 'commonjs',
       },
     ],
+    '@babel/preset-react',
+    '@babel/preset-typescript',
+    '@babel/preset-flow',
   ],
-  plugins: ['@babel/plugin-proposal-class-properties'],
+  plugins: ['@babel/plugin-transform-strict-mode'],
   env: {
     test: {
-      // https://github.com/react-native-community/upgrade-support/issues/152
-      plugins: ['@babel/plugin-transform-flow-strip-types'],
+      presets: ['@react-native/babel-preset'],
     },
   },
 };

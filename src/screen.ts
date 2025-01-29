@@ -1,5 +1,6 @@
-import { ReactTestInstance } from 'react-test-renderer';
-import { RenderResult } from './render';
+import type { ReactTestInstance } from 'react-test-renderer';
+
+import type { RenderResult } from './render';
 
 const SCREEN_ERROR = '`render` method has not been called';
 
@@ -10,9 +11,13 @@ const notImplemented = () => {
 const notImplementedDebug = () => {
   throw new Error(SCREEN_ERROR);
 };
-notImplementedDebug.shallow = notImplemented;
 
-const defaultScreen: RenderResult = {
+interface Screen extends RenderResult {
+  isDetached?: boolean;
+}
+
+const defaultScreen: Screen = {
+  isDetached: true,
   get root(): ReactTestInstance {
     throw new Error(SCREEN_ERROR);
   },
@@ -54,30 +59,6 @@ const defaultScreen: RenderResult = {
   queryAllByRole: notImplemented,
   findByRole: notImplemented,
   findAllByRole: notImplemented,
-  getByA11yState: notImplemented,
-  getAllByA11yState: notImplemented,
-  queryByA11yState: notImplemented,
-  queryAllByA11yState: notImplemented,
-  findByA11yState: notImplemented,
-  findAllByA11yState: notImplemented,
-  getByAccessibilityState: notImplemented,
-  getAllByAccessibilityState: notImplemented,
-  queryByAccessibilityState: notImplemented,
-  queryAllByAccessibilityState: notImplemented,
-  findByAccessibilityState: notImplemented,
-  findAllByAccessibilityState: notImplemented,
-  getByA11yValue: notImplemented,
-  getAllByA11yValue: notImplemented,
-  queryByA11yValue: notImplemented,
-  queryAllByA11yValue: notImplemented,
-  findByA11yValue: notImplemented,
-  findAllByA11yValue: notImplemented,
-  getByAccessibilityValue: notImplemented,
-  getAllByAccessibilityValue: notImplemented,
-  queryByAccessibilityValue: notImplemented,
-  queryAllByAccessibilityValue: notImplemented,
-  findByAccessibilityValue: notImplemented,
-  findAllByAccessibilityValue: notImplemented,
   UNSAFE_getByProps: notImplemented,
   UNSAFE_getAllByProps: notImplemented,
   UNSAFE_queryByProps: notImplemented,
@@ -112,10 +93,10 @@ const defaultScreen: RenderResult = {
   findAllByText: notImplemented,
 };
 
-export let screen: RenderResult = defaultScreen;
+export let screen: Screen = defaultScreen;
 
-export function setRenderResult(output: RenderResult) {
-  screen = output;
+export function setRenderResult(renderResult: RenderResult) {
+  screen = renderResult;
 }
 
 export function clearRenderResult() {

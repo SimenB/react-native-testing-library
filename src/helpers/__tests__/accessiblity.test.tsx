@@ -1,14 +1,8 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Switch,
-  TouchableOpacity,
-} from 'react-native';
-import { render, isHiddenFromAccessibility, isInaccessible } from '../..';
-import { isAccessibilityElement } from '../accessiblity';
+import { Pressable, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+import { isHiddenFromAccessibility, isInaccessible, render, screen } from '../..';
+import { computeAriaLabel, isAccessibilityElement } from '../accessibility';
 
 describe('isHiddenFromAccessibility', () => {
   test('returns false for accessible elements', () => {
@@ -16,24 +10,24 @@ describe('isHiddenFromAccessibility', () => {
       isHiddenFromAccessibility(
         render(<View testID="subject" />).getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(false);
 
     expect(
       isHiddenFromAccessibility(
         render(<Text testID="subject">Hello</Text>).getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(false);
 
     expect(
       isHiddenFromAccessibility(
         render(<TextInput testID="subject" />).getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(false);
   });
 
@@ -41,173 +35,193 @@ describe('isHiddenFromAccessibility', () => {
     expect(isHiddenFromAccessibility(null)).toBe(true);
   });
 
-  test('detects elements with accessibilityElementsHidden prop', () => {
-    const view = render(<View testID="subject" accessibilityElementsHidden />);
+  test('detects elements with aria-hidden prop', () => {
+    render(<View testID="subject" aria-hidden />);
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test('detects nested elements with aria-hidden prop', () => {
+    render(
+      <View aria-hidden>
+        <View testID="subject" />
+      </View>,
+    );
+    expect(
+      isHiddenFromAccessibility(
+        screen.getByTestId('subject', {
+          includeHiddenElements: true,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test('detects elements with accessibilityElementsHidden prop', () => {
+    render(<View testID="subject" accessibilityElementsHidden />);
+    expect(
+      isHiddenFromAccessibility(
+        screen.getByTestId('subject', {
+          includeHiddenElements: true,
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects nested elements with accessibilityElementsHidden prop', () => {
-    const view = render(
+    render(
       <View accessibilityElementsHidden>
         <View testID="subject" />
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects deeply nested elements with accessibilityElementsHidden prop', () => {
-    const view = render(
+    render(
       <View accessibilityElementsHidden>
         <View>
           <View>
             <View testID="subject" />
           </View>
         </View>
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects elements with importantForAccessibility="no-hide-descendants" prop', () => {
-    const view = render(
-      <View testID="subject" importantForAccessibility="no-hide-descendants" />
-    );
+    render(<View testID="subject" importantForAccessibility="no-hide-descendants" />);
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects nested elements with importantForAccessibility="no-hide-descendants" prop', () => {
-    const view = render(
+    render(
       <View importantForAccessibility="no-hide-descendants">
         <View testID="subject" />
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects elements with display=none', () => {
-    const view = render(<View testID="subject" style={{ display: 'none' }} />);
+    render(<View testID="subject" style={{ display: 'none' }} />);
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects nested elements with display=none', () => {
-    const view = render(
+    render(
       <View style={{ display: 'none' }}>
         <View testID="subject" />
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects deeply nested elements with display=none', () => {
-    const view = render(
+    render(
       <View style={{ display: 'none' }}>
         <View>
           <View>
             <View testID="subject" />
           </View>
         </View>
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects elements with display=none with complex style', () => {
-    const view = render(
+    render(
       <View
         testID="subject"
-        style={[
-          { display: 'flex' },
-          [{ display: 'flex' }],
-          { display: 'none' },
-        ]}
-      />
+        style={[{ display: 'flex' }, [{ display: 'flex' }], { display: 'none' }]}
+      />,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('is not trigged by opacity = 0', () => {
-    const view = render(<View testID="subject" style={{ opacity: 0 }} />);
+    render(<View testID="subject" style={{ opacity: 0 }} />);
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(false);
   });
 
   test('detects siblings of element with accessibilityViewIsModal prop', () => {
-    const view = render(
+    render(
       <View>
         <View accessibilityViewIsModal />
         <View testID="subject" />
-      </View>
+      </View>,
     );
     expect(
       isHiddenFromAccessibility(
-        view.getByTestId('subject', {
+        screen.getByTestId('subject', {
           includeHiddenElements: true,
-        })
-      )
+        }),
+      ),
     ).toBe(true);
   });
 
   test('detects deeply nested siblings of element with accessibilityViewIsModal prop', () => {
-    const view = render(
+    render(
       <View>
         <View accessibilityViewIsModal />
         <View>
@@ -215,68 +229,50 @@ describe('isHiddenFromAccessibility', () => {
             <View testID="subject" />
           </View>
         </View>
-      </View>
+      </View>,
     );
     expect(
-      isHiddenFromAccessibility(
-        view.getByTestId('subject', {
-          includeHiddenElements: true,
-        })
-      )
+      isHiddenFromAccessibility(screen.getByTestId('subject', { includeHiddenElements: true })),
+    ).toBe(true);
+  });
+
+  test('detects siblings of element with "aria-modal" prop', () => {
+    render(
+      <View>
+        <View aria-modal />
+        <View testID="subject" />
+      </View>,
+    );
+    expect(
+      isHiddenFromAccessibility(screen.getByTestId('subject', { includeHiddenElements: true })),
     ).toBe(true);
   });
 
   test('is not triggered for element with accessibilityViewIsModal prop', () => {
-    const view = render(
-      <View>
-        <View accessibilityViewIsModal testID="subject" />
-      </View>
-    );
-    expect(
-      isHiddenFromAccessibility(
-        view.getByTestId('subject', {
-          includeHiddenElements: true,
-        })
-      )
-    ).toBe(false);
+    render(<View accessibilityViewIsModal testID="subject" />);
+    expect(isHiddenFromAccessibility(screen.getByTestId('subject'))).toBe(false);
   });
 
   test('is not triggered for child of element with accessibilityViewIsModal prop', () => {
-    const view = render(
-      <View>
-        <View accessibilityViewIsModal>
-          <View testID="subject" />
-        </View>
-      </View>
+    render(
+      <View accessibilityViewIsModal>
+        <View testID="subject" />
+      </View>,
     );
-    expect(
-      isHiddenFromAccessibility(
-        view.getByTestId('subject', {
-          includeHiddenElements: true,
-        })
-      )
-    ).toBe(false);
+    expect(isHiddenFromAccessibility(screen.getByTestId('subject'))).toBe(false);
   });
 
   test('is not triggered for descendent of element with accessibilityViewIsModal prop', () => {
-    const view = render(
-      <View>
-        <View accessibilityViewIsModal>
+    render(
+      <View accessibilityViewIsModal>
+        <View>
           <View>
-            <View>
-              <View testID="subject" />
-            </View>
+            <View testID="subject" />
           </View>
         </View>
-      </View>
+      </View>,
     );
-    expect(
-      isHiddenFromAccessibility(
-        view.getByTestId('subject', {
-          includeHiddenElements: true,
-        })
-      )
-    ).toBe(false);
+    expect(isHiddenFromAccessibility(screen.getByTestId('subject'))).toBe(false);
   });
 
   test('has isInaccessible alias', () => {
@@ -284,35 +280,40 @@ describe('isHiddenFromAccessibility', () => {
   });
 });
 
+test('is not triggered for element with "aria-modal" prop', () => {
+  render(<View aria-modal testID="subject" />);
+  expect(isHiddenFromAccessibility(screen.getByTestId('subject'))).toBe(false);
+});
+
 describe('isAccessibilityElement', () => {
   test('matches View component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <View testID="default" />
         <View testID="true" accessible />
         <View testID="false" accessible={false} />
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeFalsy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('matches TextInput component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <TextInput testID="default" />
         <TextInput testID="true" accessible />
         <TextInput testID="false" accessible={false} />
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('matches Text component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <Text testID="default">Default</Text>
         <Text testID="true" accessible>
@@ -321,53 +322,89 @@ describe('isAccessibilityElement', () => {
         <Text testID="false" accessible={false}>
           False
         </Text>
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('matches Switch component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <Switch testID="default" />
         <Switch testID="true" accessible />
         <Switch testID="false" accessible={false} />
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('matches Pressable component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <Pressable testID="default" />
         <Pressable testID="true" accessible />
         <Pressable testID="false" accessible={false} />
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('matches TouchableOpacity component properly', () => {
-    const { getByTestId } = render(
+    render(
       <View>
         <TouchableOpacity testID="default" />
         <TouchableOpacity testID="true" accessible />
         <TouchableOpacity testID="false" accessible={false} />
-      </View>
+      </View>,
     );
-    expect(isAccessibilityElement(getByTestId('default'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('true'))).toBeTruthy();
-    expect(isAccessibilityElement(getByTestId('false'))).toBeFalsy();
+    expect(isAccessibilityElement(screen.getByTestId('default'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('true'))).toBeTruthy();
+    expect(isAccessibilityElement(screen.getByTestId('false'))).toBeFalsy();
   });
 
   test('returns false when given null', () => {
     expect(isAccessibilityElement(null)).toEqual(false);
+  });
+});
+
+describe('computeAriaLabel', () => {
+  test('supports basic usage', () => {
+    render(
+      <View>
+        <View testID="label" aria-label="Internal Label" />
+        <View testID="label-by-id" aria-labelledby="external-label" />
+        <View nativeID="external-label">
+          <Text>External Text</Text>
+        </View>
+        <View testID="no-label" />
+        <View testID="text-content">
+          <Text>Text Content</Text>
+        </View>
+      </View>,
+    );
+
+    expect(computeAriaLabel(screen.getByTestId('label'))).toEqual('Internal Label');
+    expect(computeAriaLabel(screen.getByTestId('label-by-id'))).toEqual('External Text');
+    expect(computeAriaLabel(screen.getByTestId('no-label'))).toBeUndefined();
+    expect(computeAriaLabel(screen.getByTestId('text-content'))).toBeUndefined();
+  });
+
+  test('label priority', () => {
+    render(
+      <View>
+        <View testID="subject" aria-label="Internal Label" aria-labelledby="external-content" />
+        <View nativeID="external-content">
+          <Text>External Label</Text>
+        </View>
+      </View>,
+    );
+
+    expect(computeAriaLabel(screen.getByTestId('subject'))).toEqual('External Label');
   });
 });

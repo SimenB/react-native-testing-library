@@ -1,10 +1,8 @@
-import { resetToDefaults } from './src/pure';
-
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+import { resetToDefaults, configure } from './src/pure';
 
 beforeEach(() => {
   resetToDefaults();
+  if (process.env.CONCURRENT_MODE === '0') {
+    configure({ concurrentRoot: false });
+  }
 });
-
-// Disable colors in our local tests in order to generate clear snapshots
-process.env.COLORS = 'false';

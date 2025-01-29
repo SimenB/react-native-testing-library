@@ -32,9 +32,9 @@ Our pre-commit hooks verify that your commit message matches this format when co
 
 ### Linting and tests
 
-We use `flow` for type checking, `eslint` with `prettier` for linting and formatting the code, and `jest` for testing. Our pre-commit hooks verify that the linter and tests pass when committing. You can also run the following commands manually:
+We use TypeScript for type checking, `eslint` with `prettier` for linting and formatting the code, and `jest` for testing. Our pre-commit hooks verify that the linter and tests pass when committing. You can also run the following commands manually:
 
-- `yarn flow`: run flow on all files.
+- `yarn typecheck`: run TypeScript compiler on all files.
 - `yarn lint`: run eslint and prettier.
 - `yarn test`: run tests.
 
@@ -43,16 +43,16 @@ We use `flow` for type checking, `eslint` with `prettier` for linting and format
 When you're sending a pull request:
 
 - Prefer small pull requests focused on one change.
-- Verify that `flow`, `eslint` and tests are passing.
+- Verify that `typecheck`, `eslint` and tests are passing.
 - Preview the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
 
 ### Publishing a release
 
-If you have publish access to the NPM package, run the following from the main branch to publish a new release:
+We use [release-it](https://github.com/release-it/release-it) to publish a release. It takes care of versioning, changelog generation, and publishing to NPM.
 
 ```sh
-yarn publish
+yarn release
 ```
 
 ## Reporting issues

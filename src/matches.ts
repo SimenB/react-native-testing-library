@@ -8,9 +8,9 @@ export type TextMatchOptions = {
 
 export function matches(
   matcher: TextMatch,
-  text: string,
+  text: string | undefined,
   normalizer: NormalizerFn = getDefaultNormalizer(),
-  exact: boolean = true
+  exact: boolean = true,
 ): boolean {
   if (typeof text !== 'string') {
     return false;
@@ -41,9 +41,7 @@ export function getDefaultNormalizer({
   return (text: string) => {
     let normalizedText = text;
     normalizedText = trim ? normalizedText.trim() : normalizedText;
-    normalizedText = collapseWhitespace
-      ? normalizedText.replace(/\s+/g, ' ')
-      : normalizedText;
+    normalizedText = collapseWhitespace ? normalizedText.replace(/\s+/g, ' ') : normalizedText;
     return normalizedText;
   };
 }

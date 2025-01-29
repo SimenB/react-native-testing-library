@@ -58,16 +58,13 @@ function getJestFakeTimersType(): FakeTimersTypes | null {
 }
 
 function getFakeTimersConfigFromType(type: FakeTimersTypes) {
-  return type === 'legacy'
-    ? { legacyFakeTimers: true }
-    : { legacyFakeTimers: false };
+  return type === 'legacy' ? { legacyFakeTimers: true } : { legacyFakeTimers: false };
 }
 
-const jestFakeTimersAreEnabled = (): boolean =>
-  Boolean(getJestFakeTimersType());
+const jestFakeTimersAreEnabled = (): boolean => Boolean(getJestFakeTimersType());
 
 // we only run our tests in node, and setImmediate is supported in node.
-function setImmediatePolyfill(fn: Function) {
+function setImmediatePolyfill(fn: () => void) {
   return globalObj.setTimeout(fn, 0);
 }
 
@@ -86,13 +83,13 @@ function bindTimeFunctions(): BindTimeFunctions {
 }
 
 const { clearTimeoutFn, setImmediateFn, setTimeoutFn } = runWithRealTimers(
-  bindTimeFunctions
+  bindTimeFunctions,
 ) as BindTimeFunctions;
 
 export {
-  runWithRealTimers,
-  jestFakeTimersAreEnabled,
   clearTimeoutFn as clearTimeout,
+  jestFakeTimersAreEnabled,
+  runWithRealTimers,
   setImmediateFn as setImmediate,
   setTimeoutFn as setTimeout,
 };

@@ -29,35 +29,8 @@ exports[`debug 1`] = `
     value=""
   />
   <View
-    accessibilityState={
-      {
-        "busy": undefined,
-        "checked": undefined,
-        "disabled": undefined,
-        "expanded": undefined,
-        "selected": undefined,
-      }
-    }
-    accessibilityValue={
-      {
-        "max": undefined,
-        "min": undefined,
-        "now": undefined,
-        "text": undefined,
-      }
-    }
     accessible={true}
-    collapsable={false}
-    focusable={true}
-    onBlur={[Function onBlur]}
-    onClick={[Function onClick]}
-    onFocus={[Function onFocus]}
-    onResponderGrant={[Function onResponderGrant]}
-    onResponderMove={[Function onResponderMove]}
-    onResponderRelease={[Function onResponderRelease]}
-    onResponderTerminate={[Function onResponderTerminate]}
-    onResponderTerminationRequest={[Function onResponderTerminationRequest]}
-    onStartShouldSetResponder={[Function onStartShouldSetResponder]}
+    role="button"
   >
     <Text>
       Change freshness!
@@ -137,6 +110,7 @@ exports[`debug changing component: bananaFresh button message should now be "fre
     onResponderTerminate={[Function onResponderTerminate]}
     onResponderTerminationRequest={[Function onResponderTerminationRequest]}
     onStartShouldSetResponder={[Function onStartShouldSetResponder]}
+    role="button"
   >
     <Text>
       Change freshness!
@@ -240,12 +214,14 @@ exports[`debug with only prop whose value is bananaChef 1`] = `
 </View>"
 `;
 
-exports[`debug with only props from TextInput components 1`] = `
+exports[`debug: All Props 1`] = `
 "<View>
   <Text>
     Is the banana fresh?
   </Text>
-  <Text>
+  <Text
+    testID="bananaFresh"
+  >
     not fresh
   </Text>
   <TextInput
@@ -266,208 +242,62 @@ exports[`debug with only props from TextInput components 1`] = `
     defaultValue="hello"
     value=""
   />
-  <View>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onBlur={[Function onBlur]}
+    onClick={[Function onClick]}
+    onFocus={[Function onFocus]}
+    onResponderGrant={[Function onResponderGrant]}
+    onResponderMove={[Function onResponderMove]}
+    onResponderRelease={[Function onResponderRelease]}
+    onResponderTerminate={[Function onResponderTerminate]}
+    onResponderTerminationRequest={[Function onResponderTerminationRequest]}
+    onStartShouldSetResponder={[Function onStartShouldSetResponder]}
+    role="button"
+  >
     <Text>
       Change freshness!
     </Text>
   </View>
-  <Text>
+  <Text
+    testID="duplicateText"
+  >
     First Text
   </Text>
-  <Text>
+  <Text
+    testID="duplicateText"
+  >
     Second Text
   </Text>
   <Text>
     0
   </Text>
-</View>"
+</View>
+undefined"
 `;
 
-exports[`debug: another custom message 1`] = `
+exports[`debug: Option message 1`] = `
 "another custom message
 
-<View>
-  <Text>
-    Is the banana fresh?
-  </Text>
-  <Text
-    testID="bananaFresh"
-  >
-    not fresh
-  </Text>
-  <TextInput
-    placeholder="Add custom freshness"
-    testID="bananaCustomFreshness"
-    value="Custom Freshie"
-  />
-  <TextInput
-    defaultValue="What did you inspect?"
-    placeholder="Who inspected freshness?"
-    testID="bananaChef"
-    value="I inspected freshie"
-  />
-  <TextInput
-    defaultValue="What banana?"
-  />
-  <TextInput
-    defaultValue="hello"
-    value=""
-  />
-  <View
-    accessibilityState={
-      {
-        "busy": undefined,
-        "checked": undefined,
-        "disabled": undefined,
-        "expanded": undefined,
-        "selected": undefined,
-      }
-    }
-    accessibilityValue={
-      {
-        "max": undefined,
-        "min": undefined,
-        "now": undefined,
-        "text": undefined,
-      }
-    }
-    accessible={true}
-    collapsable={false}
-    focusable={true}
-    onBlur={[Function onBlur]}
-    onClick={[Function onClick]}
-    onFocus={[Function onFocus]}
-    onResponderGrant={[Function onResponderGrant]}
-    onResponderMove={[Function onResponderMove]}
-    onResponderRelease={[Function onResponderRelease]}
-    onResponderTerminate={[Function onResponderTerminate]}
-    onResponderTerminationRequest={[Function onResponderTerminationRequest]}
-    onStartShouldSetResponder={[Function onStartShouldSetResponder]}
-  >
-    <Text>
-      Change freshness!
-    </Text>
-  </View>
-  <Text
-    testID="duplicateText"
-  >
-    First Text
-  </Text>
-  <Text
-    testID="duplicateText"
-  >
-    Second Text
-  </Text>
-  <Text>
-    0
-  </Text>
-</View>"
-`;
-
-exports[`debug: shallow 1`] = `
-"<View>
-  <Text>
-    Is the banana fresh?
-  </Text>
-  <Text
-    testID="bananaFresh"
-  >
-    not fresh
-  </Text>
-  <TextInput
-    placeholder="Add custom freshness"
-    testID="bananaCustomFreshness"
-    value="Custom Freshie"
-  />
-  <TextInput
-    defaultValue="What did you inspect?"
-    placeholder="Who inspected freshness?"
-    testID="bananaChef"
-    value="I inspected freshie"
-  />
-  <TextInput
-    defaultValue="What banana?"
-  />
-  <TextInput
-    defaultValue="hello"
-    value=""
-  />
-  <MyButton
-    onPress={[Function anonymous]}
-    type="primary"
-  >
-    Change freshness!
-  </MyButton>
-  <Text
-    testID="duplicateText"
-  >
-    First Text
-  </Text>
-  <Text
-    testID="duplicateText"
-  >
-    Second Text
-  </Text>
-  <Text>
-    0
-  </Text>
-</View>"
-`;
-
-exports[`debug: shallow with message 1`] = `
-"my other custom message
-
-<View>
-  <Text>
-    Is the banana fresh?
-  </Text>
-  <Text
-    testID="bananaFresh"
-  >
-    not fresh
-  </Text>
-  <TextInput
-    placeholder="Add custom freshness"
-    testID="bananaCustomFreshness"
-    value="Custom Freshie"
-  />
-  <TextInput
-    defaultValue="What did you inspect?"
-    placeholder="Who inspected freshness?"
-    testID="bananaChef"
-    value="I inspected freshie"
-  />
-  <TextInput
-    defaultValue="What banana?"
-  />
-  <TextInput
-    defaultValue="hello"
-    value=""
-  />
-  <MyButton
-    onPress={[Function anonymous]}
-    type="primary"
-  >
-    Change freshness!
-  </MyButton>
-  <Text
-    testID="duplicateText"
-  >
-    First Text
-  </Text>
-  <Text
-    testID="duplicateText"
-  >
-    Second Text
-  </Text>
-  <Text>
-    0
-  </Text>
-</View>"
-`;
-
-exports[`debug: with message 1`] = `
-"my custom message
 
 <View>
   <Text>
@@ -497,35 +327,8 @@ exports[`debug: with message 1`] = `
     value=""
   />
   <View
-    accessibilityState={
-      {
-        "busy": undefined,
-        "checked": undefined,
-        "disabled": undefined,
-        "expanded": undefined,
-        "selected": undefined,
-      }
-    }
-    accessibilityValue={
-      {
-        "max": undefined,
-        "min": undefined,
-        "now": undefined,
-        "text": undefined,
-      }
-    }
     accessible={true}
-    collapsable={false}
-    focusable={true}
-    onBlur={[Function onBlur]}
-    onClick={[Function onClick]}
-    onFocus={[Function onFocus]}
-    onResponderGrant={[Function onResponderGrant]}
-    onResponderMove={[Function onResponderMove]}
-    onResponderRelease={[Function onResponderRelease]}
-    onResponderTerminate={[Function onResponderTerminate]}
-    onResponderTerminationRequest={[Function onResponderTerminationRequest]}
-    onStartShouldSetResponder={[Function onStartShouldSetResponder]}
+    role="button"
   >
     <Text>
       Change freshness!

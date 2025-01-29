@@ -1,25 +1,37 @@
-name: Test Example Apps
+name: Validate Example Apps
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches: [main]
+    paths: ['examples/**']
+  pull_request:
+    branches: ['**']
+    paths: ['examples/**']
 
 jobs:
   test-example:
     strategy:
       matrix:
-        node: [14, 16, 18]
-        example: [basic, redux, react-navigation]
+        example: [basic, cookbook]
+
     name: Test Example
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 20
           cache: 'yarn'
 
       - name: Install and build
-        run: cd examples/${{ matrix.example }} && yarn install && yarn test
+        run: yarn --cwd examples/${{ matrix.example }} install
+
+      - name: Type Check
+        run: yarn --cwd examples/${{ matrix.example }} typecheck
+
+      - name: Test
+        run: yarn --cwd examples/${{ matrix.example }} test

@@ -1,21 +1,12 @@
 import * as React from 'react';
-import {
-  StyleSheet,
-  SafeAreaView,
-  Text,
-  FlatList,
-  Pressable,
-} from 'react-native';
+import { StyleSheet, SafeAreaView, Text, FlatList, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Experiment, experiments } from './experiments';
 
 export function MainScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={experiments}
-        renderItem={({ item }) => <ListItem item={item} />}
-      />
+      <FlatList data={experiments} renderItem={({ item }) => <ListItem item={item} />} />
     </SafeAreaView>
   );
 }
@@ -28,6 +19,7 @@ function ListItem({ item }: ListItemProps) {
   const navigation = useNavigation();
 
   const handlePress = () => {
+    // @ts-expect-error missing navigation typing
     navigation.navigate(item.key);
   };
 

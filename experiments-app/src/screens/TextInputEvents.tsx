@@ -1,20 +1,13 @@
 import * as React from 'react';
 import { StyleSheet, SafeAreaView, TextInput } from 'react-native';
-import { buildEventLogger } from '../utils/helpers';
-
-const handlePressIn = buildEventLogger('pressIn');
-const handlePressOut = buildEventLogger('pressOut');
-const handleFocus = buildEventLogger('focus');
-const handleBlur = buildEventLogger('blur');
-const handleChange = buildEventLogger('change');
-const handleSubmitEditing = buildEventLogger('submitEditing');
+import { nativeEventLogger, logEvent } from '../utils/helpers';
 
 export function TextInputEvents() {
   const [value, setValue] = React.useState('');
 
   const handleChangeText = (value: string) => {
     setValue(value);
-    console.log(`Event: changeText`, value);
+    logEvent('changeText', value);
   };
 
   return (
@@ -24,12 +17,17 @@ export function TextInputEvents() {
         value={value}
         editable={true}
         onChangeText={handleChangeText}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        onSubmitEditing={handleSubmitEditing}
+        onChange={nativeEventLogger('change')}
+        onKeyPress={nativeEventLogger('keyPress')}
+        onEndEditing={nativeEventLogger('endEditing')}
+        onSubmitEditing={nativeEventLogger('submitEditing')}
+        onTextInput={nativeEventLogger('textInput')}
+        onSelectionChange={nativeEventLogger('selectionChange')}
+        onContentSizeChange={nativeEventLogger('contentSizeChange')}
+        onFocus={nativeEventLogger('focus')}
+        onBlur={nativeEventLogger('blur')}
+        onPressIn={nativeEventLogger('pressIn')}
+        onPressOut={nativeEventLogger('pressOut')}
       />
     </SafeAreaView>
   );

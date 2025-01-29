@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 import App from '../App';
+
+jest.useFakeTimers();
 
 /**
  * A good place to start is having a tests that your component renders correctly.
@@ -11,9 +13,7 @@ test('renders correctly', () => {
 
   // Idiom: `getBy*` queries are predicates by themselves, but we will use it with `expect().toBeOnTheScreen()`
   // to clarify our intent.
-  expect(
-    screen.getByRole('header', { name: 'Sign in to Example App' })
-  ).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Sign in to Example App' })).toBeOnTheScreen();
 });
 
 /**
@@ -22,34 +22,31 @@ test('renders correctly', () => {
  * his point of view.
  */
 test('User can sign in successully with correct credentials', async () => {
+  // Setup User Event instance for realistic simulation of user interaction.
+  const user = userEvent.setup();
+
   // Idiom: no need to capture render output, as we will use `screen` for queries.
   render(<App />);
 
   // Idiom: `getBy*` queries are predicates by themselves, but we will use it with `expect().toBeOnTheScreen()`
   // to clarify our intent.
-  expect(
-    screen.getByRole('header', { name: 'Sign in to Example App' })
-  ).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Sign in to Example App' })).toBeOnTheScreen();
 
   // Hint: we can use `getByLabelText` to find our text inputs using their labels.
-  fireEvent.changeText(screen.getByLabelText('Username'), 'admin');
-  fireEvent.changeText(screen.getByLabelText('Password'), 'admin1');
+  await user.type(screen.getByLabelText('Username'), 'admin');
+  await user.type(screen.getByLabelText('Password'), 'admin1');
 
   // Hint: we can use `getByRole` to find our button with given text.
-  fireEvent.press(screen.getByRole('button', { name: 'Sign In' }));
+  await user.press(screen.getByRole('button', { name: 'Sign In' }));
 
   // Idiom: since pressing button triggers async operation we need to use `findBy*` query to wait
   // for the action to complete.
   // Hint: subsequent queries do not need to use `findBy*`, because they are used after the async action
   // already finished
-  expect(
-    await screen.findByRole('header', { name: 'Welcome admin!' })
-  ).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: 'Welcome admin!' })).toBeOnTheScreen();
 
   // Idiom: use `queryBy*` with `expect().not.toBeOnTheScreen()` to assess that element is not present.
-  expect(
-    screen.queryByRole('header', { name: 'Sign in to Example App' })
-  ).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: 'Sign in to Example App' })).not.toBeOnTheScreen();
   expect(screen.queryByLabelText('Username')).not.toBeOnTheScreen();
   expect(screen.queryByLabelText('Password')).not.toBeOnTheScreen();
 });
@@ -67,24 +64,19 @@ test('User can sign in successully with correct credentials', async () => {
  * Note: that some times you will have to resort to `getByTestId`, but treat it as a last resort.
  */
 test('User will see errors for incorrect credentials', async () => {
+  const user = userEvent.setup();
   render(<App />);
 
-  expect(
-    screen.getByRole('header', { name: 'Sign in to Example App' })
-  ).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Sign in to Example App' })).toBeOnTheScreen();
 
-  fireEvent.changeText(screen.getByLabelText('Username'), 'admin');
-  fireEvent.changeText(screen.getByLabelText('Password'), 'qwerty123');
-  fireEvent.press(screen.getByRole('button', { name: 'Sign In' }));
+  await user.type(screen.getByLabelText('Username'), 'admin');
+  await user.type(screen.getByLabelText('Password'), 'qwerty123');
+  await user.press(screen.getByRole('button', { name: 'Sign In' }));
 
   // Hint: you can use custom Jest Native matcher to check text content.
-  expect(await screen.findByRole('alert')).toHaveTextContent(
-    'Incorrect username or password'
-  );
+  expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect username or password');
 
-  expect(
-    screen.getByRole('header', { name: 'Sign in to Example App' })
-  ).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Sign in to Example App' })).toBeOnTheScreen();
   expect(screen.getByLabelText('Username')).toBeOnTheScreen();
   expect(screen.getByLabelText('Password')).toBeOnTheScreen();
 });
@@ -93,27 +85,28 @@ test('User will see errors for incorrect credentials', async () => {
  * Do not be afraid to write longer test scenarios, with repeating act and assert statements.
  */
 test('User can sign in after incorrect attempt', async () => {
+  const user = userEvent.setup();
   render(<App />);
 
-  expect(
-    screen.getByRole('header', { name: 'Sign in to Example App' })
-  ).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: 'Sign in to Example App' })).toBeOnTheScreen();
 
-  fireEvent.changeText(screen.getByLabelText('Username'), 'admin');
-  fireEvent.changeText(screen.getByLabelText('Password'), 'qwerty123');
-  fireEvent.press(screen.getByRole('button', { name: 'Sign In' }));
+  const usernameInput = screen.getByLabelText('Username');
+  const passwordInput = screen.getByLabelText('Password');
 
-  expect(await screen.findByRole('alert')).toHaveTextContent(
-    'Incorrect username or password'
-  );
+  await user.type(usernameInput, 'admin');
+  await user.type(passwordInput, 'qwerty123');
+  await user.press(screen.getByRole('button', { name: 'Sign In' }));
 
-  fireEvent.changeText(screen.getByLabelText('Password'), 'admin1');
-  fireEvent.press(screen.getByRole('button', { name: 'Sign In' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect username or password');
+
+  // Clear password field
+  await user.clear(passwordInput);
+
+  await user.type(passwordInput, 'admin1');
+  await user.press(screen.getByRole('button', { name: 'Sign In' }));
 
   expect(await screen.findByText('Welcome admin!')).toBeOnTheScreen();
-  expect(
-    screen.queryByRole('header', { name: 'Sign in to Example App' })
-  ).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: 'Sign in to Example App' })).not.toBeOnTheScreen();
   expect(screen.queryByLabelText('Username')).not.toBeOnTheScreen();
   expect(screen.queryByLabelText('Password')).not.toBeOnTheScreen();
 });

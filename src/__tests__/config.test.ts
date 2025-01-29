@@ -1,9 +1,8 @@
-import {
-  getConfig,
-  configure,
-  resetToDefaults,
-  configureInternal,
-} from '../config';
+import { configure, getConfig, resetToDefaults } from '../config';
+
+beforeEach(() => {
+  resetToDefaults();
+});
 
 test('getConfig() returns existing configuration', () => {
   expect(getConfig().asyncUtilTimeout).toEqual(1000);
@@ -17,6 +16,7 @@ test('configure() overrides existing config values', () => {
     asyncUtilTimeout: 5000,
     defaultDebugOptions: { message: 'debug message' },
     defaultIncludeHiddenElements: false,
+    concurrentRoot: true,
   });
 });
 
@@ -34,13 +34,11 @@ test('resetToDefaults() resets config to defaults', () => {
 });
 
 test('resetToDefaults() resets internal config to defaults', () => {
-  configureInternal({
-    hostComponentNames: { text: 'A', textInput: 'A' },
-  });
-  expect(getConfig().hostComponentNames).toEqual({ text: 'A', textInput: 'A' });
+  configure({ asyncUtilTimeout: 2000 });
+  expect(getConfig().asyncUtilTimeout).toBe(2000);
 
   resetToDefaults();
-  expect(getConfig().hostComponentNames).toBe(undefined);
+  expect(getConfig().asyncUtilTimeout).toBe(1000);
 });
 
 test('configure handles alias option defaultHidden', () => {

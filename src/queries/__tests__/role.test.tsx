@@ -1,13 +1,17 @@
 import * as React from 'react';
 import {
+  Button as RNButton,
+  Image,
+  Pressable,
+  Switch,
+  Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Text,
   View,
-  Pressable,
-  Button as RNButton,
 } from 'react-native';
-import { render } from '../..';
+
+import { render, screen } from '../..';
 
 const TEXT_LABEL = 'cool text';
 
@@ -15,11 +19,11 @@ const TEXT_LABEL = 'cool text';
 const NO_MATCHES_TEXT: any = 'not-existent-element';
 
 const getMultipleInstancesFoundMessage = (value: string) => {
-  return `Found multiple elements with role: "${value}"`;
+  return `Found multiple elements with role: ${value}`;
 };
 
 const getNoInstancesFoundMessage = (value: string) => {
-  return `Unable to find an element with role: "${value}"`;
+  return `Unable to find an element with role: ${value}`;
 };
 
 const Typography = ({ children, ...rest }: any) => {
@@ -40,171 +44,222 @@ const Section = () => (
 );
 
 test('getByRole, queryByRole, findByRole', async () => {
-  const { getByRole, queryByRole, findByRole } = render(<Section />);
+  render(<Section />);
 
-  expect(getByRole('button').props.accessibilityRole).toEqual('button');
-  const button = queryByRole(/button/g);
+  expect(screen.getByRole('button').props.accessibilityRole).toEqual('button');
+  const button = screen.queryByRole(/button/);
   expect(button?.props.accessibilityRole).toEqual('button');
 
-  expect(() => getByRole(NO_MATCHES_TEXT)).toThrow(
-    getNoInstancesFoundMessage(NO_MATCHES_TEXT)
+  expect(() => screen.getByRole(NO_MATCHES_TEXT)).toThrow(
+    getNoInstancesFoundMessage(NO_MATCHES_TEXT),
   );
 
-  expect(queryByRole(NO_MATCHES_TEXT)).toBeNull();
+  expect(screen.queryByRole(NO_MATCHES_TEXT)).toBeNull();
 
-  expect(() => getByRole('link')).toThrow(
-    getMultipleInstancesFoundMessage('link')
-  );
-  expect(() => queryByRole('link')).toThrow(
-    getMultipleInstancesFoundMessage('link')
-  );
+  expect(() => screen.getByRole('link')).toThrow(getMultipleInstancesFoundMessage('link'));
+  expect(() => screen.queryByRole('link')).toThrow(getMultipleInstancesFoundMessage('link'));
 
-  const asyncButton = await findByRole('button');
+  const asyncButton = await screen.findByRole('button');
   expect(asyncButton.props.accessibilityRole).toEqual('button');
-  await expect(findByRole(NO_MATCHES_TEXT)).rejects.toThrow(
-    getNoInstancesFoundMessage(NO_MATCHES_TEXT)
+  await expect(screen.findByRole(NO_MATCHES_TEXT)).rejects.toThrow(
+    getNoInstancesFoundMessage(NO_MATCHES_TEXT),
   );
-  await expect(findByRole('link')).rejects.toThrow(
-    getMultipleInstancesFoundMessage('link')
-  );
+  await expect(screen.findByRole('link')).rejects.toThrow(getMultipleInstancesFoundMessage('link'));
 });
 
 test('getAllByRole, queryAllByRole, findAllByRole', async () => {
-  const { getAllByRole, queryAllByRole, findAllByRole } = render(<Section />);
+  render(<Section />);
 
-  expect(getAllByRole('link')).toHaveLength(2);
-  expect(queryAllByRole(/ink/g)).toHaveLength(2);
+  expect(screen.getAllByRole('link')).toHaveLength(2);
+  expect(screen.queryAllByRole(/ink/)).toHaveLength(2);
 
-  expect(() => getAllByRole(NO_MATCHES_TEXT)).toThrow(
-    getNoInstancesFoundMessage(NO_MATCHES_TEXT)
+  expect(() => screen.getAllByRole(NO_MATCHES_TEXT)).toThrow(
+    getNoInstancesFoundMessage(NO_MATCHES_TEXT),
   );
-  expect(queryAllByRole(NO_MATCHES_TEXT)).toEqual([]);
+  expect(screen.queryAllByRole(NO_MATCHES_TEXT)).toEqual([]);
 
-  await expect(findAllByRole('link')).resolves.toHaveLength(2);
-  await expect(findAllByRole(NO_MATCHES_TEXT)).rejects.toThrow(
-    getNoInstancesFoundMessage(NO_MATCHES_TEXT)
+  await expect(screen.findAllByRole('link')).resolves.toHaveLength(2);
+  await expect(screen.findAllByRole(NO_MATCHES_TEXT)).rejects.toThrow(
+    getNoInstancesFoundMessage(NO_MATCHES_TEXT),
   );
+});
+
+test('supports role prop', () => {
+  render(
+    <>
+      <View accessible role="checkbox" />
+      <View accessible role="radio" />
+      <View accessible role="switch" />
+      <View accessible role="tab" />
+      <Text role="alert" />
+      <Text role="heading" />
+      <Text role="searchbox" />
+      <Pressable role="button" />
+    </>,
+  );
+
+  expect(screen.getByRole('checkbox')).toBeTruthy();
+  expect(screen.getByRole('radio')).toBeTruthy();
+  expect(screen.getByRole('switch')).toBeTruthy();
+  expect(screen.getByRole('tab')).toBeTruthy();
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(screen.getByRole('heading')).toBeTruthy();
+  expect(screen.getByRole('searchbox')).toBeTruthy();
+  expect(screen.getByRole('button')).toBeTruthy();
+});
+
+test('supports default View component "none" role', () => {
+  render(<View testID="view" accessible />);
+  expect(screen.getByRole('none').props.testID).toBe('view');
+});
+
+test('supports default Text component  "text" role', () => {
+  render(<Text testID="text" />);
+  expect(screen.getByRole('text').props.testID).toBe('text');
+});
+
+test('supports default TextInput component "none" role', () => {
+  render(<TextInput testID="text-input" />);
+  expect(screen.getByRole('none').props.testID).toBe('text-input');
 });
 
 describe('supports name option', () => {
   test('returns an element that has the corresponding role and a children with the name', () => {
-    const { getByRole } = render(
+    render(
       <TouchableOpacity accessibilityRole="button" testID="target-button">
         <Text>Save</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('button', { name: 'Save' }).props.testID).toBe(
-      'target-button'
-    );
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
   });
 
   test('returns an element that has the corresponding role when several children include the name', () => {
-    const { getByRole } = render(
+    render(
       <TouchableOpacity accessibilityRole="button" testID="target-button">
         <Text>Save</Text>
         <Text>Save</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('button', { name: 'Save' }).props.testID).toBe(
-      'target-button'
-    );
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
   });
 
   test('returns an element that has the corresponding role and a children with a matching accessibilityLabel', () => {
-    const { getByRole } = render(
+    render(
       <TouchableOpacity accessibilityRole="button" testID="target-button">
         <Text accessibilityLabel="Save" />
-      </TouchableOpacity>
+      </TouchableOpacity>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('button', { name: 'Save' }).props.testID).toBe(
-      'target-button'
-    );
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
   });
 
   test('returns an element that has the corresponding role and a matching accessibilityLabel', () => {
-    const { getByRole } = render(
+    render(
       <TouchableOpacity
         accessibilityRole="button"
         testID="target-button"
         accessibilityLabel="Save"
-      ></TouchableOpacity>
+      ></TouchableOpacity>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('button', { name: 'Save' }).props.testID).toBe(
-      'target-button'
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
+  });
+
+  test('returns an element that has the corresponding role and a children with a matching aria-label', () => {
+    render(
+      <TouchableOpacity accessibilityRole="button" testID="target-button">
+        <Text aria-label="Save" />
+      </TouchableOpacity>,
     );
+
+    // assert on the testId to be sure that the returned element is the one with the accessibilityRole
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
+  });
+
+  test('returns an element that has the corresponding role and a matching aria-label', () => {
+    render(
+      <TouchableOpacity
+        accessibilityRole="button"
+        testID="target-button"
+        aria-label="Save"
+      ></TouchableOpacity>,
+    );
+
+    // assert on the testId to be sure that the returned element is the one with the accessibilityRole
+    expect(screen.getByRole('button', { name: 'Save' }).props.testID).toBe('target-button');
   });
 
   test('returns an element when the direct child is text', () => {
-    const { getByRole, getByTestId } = render(
+    render(
       <Text accessibilityRole="header" testID="target-header">
         About
-      </Text>
+      </Text>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('header', { name: 'About' })).toBe(
-      getByTestId('target-header')
-    );
-    expect(getByRole('header', { name: 'About' }).props.testID).toBe(
-      'target-header'
-    );
+    expect(screen.getByRole('header', { name: 'About' })).toBe(screen.getByTestId('target-header'));
+    expect(screen.getByRole('header', { name: 'About' }).props.testID).toBe('target-header');
   });
 
   test('returns an element with nested Text as children', () => {
-    const { getByRole, getByTestId } = render(
+    render(
       <Text accessibilityRole="header" testID="parent">
         <Text testID="child">About</Text>
-      </Text>
+      </Text>,
     );
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('header', { name: 'About' })).toBe(getByTestId('parent'));
-    expect(getByRole('header', { name: 'About' }).props.testID).toBe('parent');
+    expect(screen.getByRole('header', { name: 'About' })).toBe(screen.getByTestId('parent'));
+    expect(screen.getByRole('header', { name: 'About' }).props.testID).toBe('parent');
   });
 
   test('returns a header with an accessibilityLabel', () => {
-    const { getByRole, getByTestId } = render(
-      <Text
-        accessibilityRole="header"
-        testID="target-header"
-        accessibilityLabel="About"
-      />
-    );
+    render(<Text accessibilityRole="header" testID="target-header" accessibilityLabel="About" />);
 
     // assert on the testId to be sure that the returned element is the one with the accessibilityRole
-    expect(getByRole('header', { name: 'About' })).toBe(
-      getByTestId('target-header')
+    expect(screen.getByRole('header', { name: 'About' })).toBe(screen.getByTestId('target-header'));
+    expect(screen.getByRole('header', { name: 'About' }).props.testID).toBe('target-header');
+  });
+
+  test('supports host Image element with "alt" prop', () => {
+    render(
+      <>
+        <Image testID="image1" role="img" alt="an elephant" />
+        <Image testID="image2" accessibilityRole="image" alt="a tiger" />
+      </>,
     );
-    expect(getByRole('header', { name: 'About' }).props.testID).toBe(
-      'target-header'
-    );
+
+    const expectedElement1 = screen.getByTestId('image1');
+    expect(screen.getByRole('img', { name: 'an elephant' })).toBe(expectedElement1);
+    expect(screen.getByRole('image', { name: 'an elephant' })).toBe(expectedElement1);
+    expect(screen.getByRole(/img/, { name: /elephant/ })).toBe(expectedElement1);
+
+    const expectedElement2 = screen.getByTestId('image2');
+    expect(screen.getByRole('img', { name: 'a tiger' })).toBe(expectedElement2);
+    expect(screen.getByRole('image', { name: 'a tiger' })).toBe(expectedElement2);
+    expect(screen.getByRole(/img/, { name: /tiger/ })).toBe(expectedElement2);
   });
 });
 
 describe('supports accessibility states', () => {
   describe('disabled', () => {
     test('returns a disabled element when required', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityState={{ disabled: true }}
-        />
+      render(
+        <TouchableOpacity accessibilityRole="button" accessibilityState={{ disabled: true }} />,
       );
 
-      expect(getByRole('button', { disabled: true })).toBeTruthy();
-      expect(queryByRole('button', { disabled: false })).toBe(null);
+      expect(screen.getByRole('button', { disabled: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: false })).toBe(null);
     });
 
     test('returns the correct element when only one matches all the requirements', () => {
-      const { getByRole } = render(
+      render(
         <>
           <TouchableOpacity
             testID="correct"
@@ -216,48 +271,49 @@ describe('supports accessibility states', () => {
           <TouchableOpacity testID="wrong" accessibilityRole="button">
             <Text>Save</Text>
           </TouchableOpacity>
-        </>
+        </>,
       );
 
       expect(
-        getByRole('button', { name: 'Save', disabled: true }).props.testID
+        screen.getByRole('button', {
+          name: 'Save',
+          disabled: true,
+        }).props.testID,
       ).toBe('correct');
     });
 
     test('returns an implicitly enabled element', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity accessibilityRole="button"></TouchableOpacity>
-      );
+      render(<TouchableOpacity accessibilityRole="button"></TouchableOpacity>);
 
-      expect(getByRole('button', { disabled: false })).toBeTruthy();
-      expect(queryByRole('button', { disabled: true })).toBe(null);
+      expect(screen.getByRole('button', { disabled: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: true })).toBe(null);
     });
 
     test('returns an explicitly enabled element', () => {
-      const { getByRole, queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ disabled: false }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(getByRole('button', { disabled: false })).toBeTruthy();
-      expect(queryByRole('button', { disabled: true })).toBe(null);
+      expect(screen.getByRole('button', { disabled: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: true })).toBe(null);
     });
 
     test('does not return disabled elements when querying for non disabled', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ disabled: true }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('button', { disabled: false })).toBe(null);
+      expect(screen.queryByRole('button', { disabled: false })).toBe(null);
     });
 
     test('returns elements using the built-in disabled prop', () => {
-      const { getByRole } = render(
+      render(
         <>
           <Pressable disabled accessibilityRole="button">
             <Text>Pressable</Text>
@@ -269,41 +325,50 @@ describe('supports accessibility states', () => {
             </View>
           </TouchableWithoutFeedback>
           <RNButton disabled onPress={() => {}} title="RNButton" />
-        </>
+        </>,
       );
 
-      expect(
-        getByRole('button', { name: 'Pressable', disabled: true })
-      ).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Pressable', disabled: true })).toBeTruthy();
 
       expect(
-        getByRole('button', {
+        screen.getByRole('button', {
           name: 'TouchableWithoutFeedback',
           disabled: true,
-        })
+        }),
       ).toBeTruthy();
 
-      expect(
-        getByRole('button', { name: 'RNButton', disabled: true })
-      ).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'RNButton', disabled: true })).toBeTruthy();
+    });
+
+    test('supports aria-disabled={true} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-disabled={true} />);
+      expect(screen.getByRole('button', { disabled: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: false })).toBeNull();
+    });
+
+    test('supports aria-disabled={false} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-disabled={false} />);
+      expect(screen.getByRole('button', { disabled: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: true })).toBeNull();
+    });
+
+    test('supports default aria-disabled prop', () => {
+      render(<View accessible accessibilityRole="button" />);
+      expect(screen.getByRole('button', { disabled: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { disabled: true })).toBeNull();
     });
   });
 
   describe('selected', () => {
     test('returns a selected element when required', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="tab"
-          accessibilityState={{ selected: true }}
-        />
-      );
+      render(<TouchableOpacity accessibilityRole="tab" accessibilityState={{ selected: true }} />);
 
-      expect(getByRole('tab', { selected: true })).toBeTruthy();
-      expect(queryByRole('tab', { selected: false })).toBe(null);
+      expect(screen.getByRole('tab', { selected: true })).toBeTruthy();
+      expect(screen.queryByRole('tab', { selected: false })).toBe(null);
     });
 
     test('returns the correct element when only one matches all the requirements', () => {
-      const { getByRole } = render(
+      render(
         <>
           <TouchableOpacity
             testID="correct"
@@ -315,87 +380,94 @@ describe('supports accessibility states', () => {
           <TouchableOpacity testID="wrong" accessibilityRole="tab">
             <Text>Save</Text>
           </TouchableOpacity>
-        </>
+        </>,
       );
 
-      expect(
-        getByRole('tab', { name: 'Save', selected: true }).props.testID
-      ).toBe('correct');
+      expect(screen.getByRole('tab', { name: 'Save', selected: true }).props.testID).toBe(
+        'correct',
+      );
     });
 
     test('returns an implicitly non selected element', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity accessibilityRole="tab"></TouchableOpacity>
-      );
+      render(<TouchableOpacity accessibilityRole="tab"></TouchableOpacity>);
 
-      expect(getByRole('tab', { selected: false })).toBeTruthy();
-      expect(queryByRole('tab', { selected: true })).toBe(null);
+      expect(screen.getByRole('tab', { selected: false })).toBeTruthy();
+      expect(screen.queryByRole('tab', { selected: true })).toBe(null);
     });
 
     test('returns an explicitly non selected element', () => {
-      const { getByRole, queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="tab"
           accessibilityState={{ selected: false }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(getByRole('tab', { selected: false })).toBeTruthy();
-      expect(queryByRole('tab', { selected: true })).toBe(null);
+      expect(screen.getByRole('tab', { selected: false })).toBeTruthy();
+      expect(screen.queryByRole('tab', { selected: true })).toBe(null);
     });
 
     test('does not return selected elements when querying for non selected', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="tab"
           accessibilityState={{ selected: true }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('tab', { selected: false })).toBe(null);
+      expect(screen.queryByRole('tab', { selected: false })).toBe(null);
+    });
+
+    test('supports aria-selected={true} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-selected={true} />);
+      expect(screen.getByRole('button', { selected: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { selected: false })).toBeNull();
+    });
+
+    test('supports aria-selected={false} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-selected={false} />);
+      expect(screen.getByRole('button', { selected: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { selected: true })).toBeNull();
+    });
+
+    test('supports default aria-selected prop', () => {
+      render(<View accessible accessibilityRole="button" />);
+      expect(screen.getByRole('button', { selected: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { selected: true })).toBeNull();
     });
   });
 
   describe('checked', () => {
     test('returns a checked element when required', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: true }}
-        />
+      render(
+        <TouchableOpacity accessibilityRole="checkbox" accessibilityState={{ checked: true }} />,
       );
 
-      expect(getByRole('checkbox', { checked: true })).toBeTruthy();
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
-      expect(queryByRole('checkbox', { checked: 'mixed' })).toBe(null);
+      expect(screen.getByRole('checkbox', { checked: true })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: 'mixed' })).toBe(null);
     });
 
-    it('returns `mixed` checkboxes', () => {
-      const { queryByRole, getByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: 'mixed' }}
-        />
+    test('returns `mixed` checkboxes', () => {
+      render(
+        <TouchableOpacity accessibilityRole="checkbox" accessibilityState={{ checked: 'mixed' }} />,
       );
 
-      expect(getByRole('checkbox', { checked: 'mixed' })).toBeTruthy();
-      expect(queryByRole('checkbox', { checked: true })).toBe(null);
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.getByRole('checkbox', { checked: 'mixed' })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: true })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
     });
 
     it('does not return mixed checkboxes when querying for checked: true', () => {
-      const { queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: 'mixed' }}
-        />
+      render(
+        <TouchableOpacity accessibilityRole="checkbox" accessibilityState={{ checked: 'mixed' }} />,
       );
 
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
     });
 
     test('returns the correct element when only one matches all the requirements', () => {
-      const { getByRole } = render(
+      render(
         <>
           <TouchableOpacity
             testID="correct"
@@ -407,72 +479,105 @@ describe('supports accessibility states', () => {
           <TouchableOpacity testID="wrong" accessibilityRole="checkbox">
             <Text>Save</Text>
           </TouchableOpacity>
-        </>
+        </>,
       );
 
       expect(
-        getByRole('checkbox', { name: 'Save', checked: true }).props.testID
+        screen.getByRole('checkbox', {
+          name: 'Save',
+          checked: true,
+        }).props.testID,
       ).toBe('correct');
     });
 
     test('does not return return as non checked an element with checked: undefined', () => {
-      const { queryByRole } = render(
-        <TouchableOpacity accessibilityRole="checkbox"></TouchableOpacity>
-      );
+      render(<TouchableOpacity accessibilityRole="checkbox"></TouchableOpacity>);
 
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
     });
 
     test('returns an explicitly non checked element', () => {
-      const { getByRole, queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="checkbox"
           accessibilityState={{ checked: false }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(getByRole('checkbox', { checked: false })).toBeTruthy();
-      expect(queryByRole('checkbox', { checked: true })).toBe(null);
+      expect(screen.getByRole('checkbox', { checked: false })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: true })).toBe(null);
     });
 
     test('does not return checked elements when querying for non checked', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="checkbox"
           accessibilityState={{ checked: true }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
     });
 
     test('does not return mixed elements when querying for non checked', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="checkbox"
           accessibilityState={{ checked: 'mixed' }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('checkbox', { checked: false })).toBe(null);
+      expect(screen.queryByRole('checkbox', { checked: false })).toBe(null);
+    });
+
+    test('supports "Switch" component', () => {
+      render(<Switch value={true} />);
+
+      expect(screen.getByRole('switch', { checked: true })).toBeTruthy();
+      expect(screen.queryByRole('switch', { checked: false })).toBe(null);
+      expect(screen.queryByRole('switch', { checked: 'mixed' })).toBe(null);
+    });
+
+    test('supports aria-checked={true} prop', () => {
+      render(<View accessible role="checkbox" aria-checked={true} />);
+      expect(screen.getByRole('checkbox', { checked: true })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: false })).toBeNull();
+      expect(screen.queryByRole('checkbox', { checked: 'mixed' })).toBeNull();
+    });
+
+    test('supports aria-checked={false} prop', () => {
+      render(<View accessible role="checkbox" aria-checked={false} />);
+      expect(screen.getByRole('checkbox', { checked: false })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: true })).toBeNull();
+      expect(screen.queryByRole('checkbox', { checked: 'mixed' })).toBeNull();
+    });
+
+    test('supports aria-checked="mixed" prop', () => {
+      render(<View accessible role="checkbox" aria-checked="mixed" />);
+      expect(screen.getByRole('checkbox', { checked: 'mixed' })).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: true })).toBeNull();
+      expect(screen.queryByRole('checkbox', { checked: false })).toBeNull();
+    });
+
+    test('supports default aria-selected prop', () => {
+      render(<View accessible role="checkbox" />);
+      expect(screen.getByRole('checkbox')).toBeTruthy();
+      expect(screen.queryByRole('checkbox', { checked: true })).toBeNull();
+      expect(screen.queryByRole('checkbox', { checked: false })).toBeNull();
+      expect(screen.queryByRole('checkbox', { checked: 'mixed' })).toBeNull();
     });
   });
 
   describe('busy', () => {
     test('returns a busy element when required', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityState={{ busy: true }}
-        />
-      );
+      render(<TouchableOpacity accessibilityRole="button" accessibilityState={{ busy: true }} />);
 
-      expect(getByRole('button', { busy: true })).toBeTruthy();
-      expect(queryByRole('button', { busy: false })).toBe(null);
+      expect(screen.getByRole('button', { busy: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: false })).toBe(null);
     });
 
     test('returns the correct element when only one matches all the requirements', () => {
-      const { getByRole } = render(
+      render(
         <>
           <TouchableOpacity
             testID="correct"
@@ -484,62 +589,73 @@ describe('supports accessibility states', () => {
           <TouchableOpacity testID="wrong" accessibilityRole="button">
             <Text>Save</Text>
           </TouchableOpacity>
-        </>
+        </>,
       );
 
-      expect(
-        getByRole('button', { name: 'Save', busy: true }).props.testID
-      ).toBe('correct');
+      expect(screen.getByRole('button', { name: 'Save', busy: true }).props.testID).toBe('correct');
     });
 
     test('returns an implicitly non busy element', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity accessibilityRole="button"></TouchableOpacity>
-      );
+      render(<TouchableOpacity accessibilityRole="button"></TouchableOpacity>);
 
-      expect(getByRole('button', { busy: false })).toBeTruthy();
-      expect(queryByRole('button', { busy: true })).toBe(null);
+      expect(screen.getByRole('button', { busy: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: true })).toBe(null);
     });
 
     test('returns an explicitly non busy element', () => {
-      const { getByRole, queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ busy: false }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(getByRole('button', { busy: false })).toBeTruthy();
-      expect(queryByRole('button', { busy: true })).toBe(null);
+      expect(screen.getByRole('button', { busy: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: true })).toBe(null);
     });
 
     test('does not return busy elements when querying for non busy', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ selected: true }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('button', { selected: false })).toBe(null);
+      expect(screen.queryByRole('button', { selected: false })).toBe(null);
+    });
+
+    test('supports aria-busy={true} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-busy={true} />);
+      expect(screen.getByRole('button', { busy: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: false })).toBeNull();
+    });
+
+    test('supports aria-busy={false} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-busy={false} />);
+      expect(screen.getByRole('button', { busy: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: true })).toBeNull();
+    });
+
+    test('supports default aria-busy prop', () => {
+      render(<View accessible accessibilityRole="button" />);
+      expect(screen.getByRole('button', { busy: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { busy: true })).toBeNull();
     });
   });
 
   describe('expanded', () => {
     test('returns a expanded element when required', () => {
-      const { getByRole, queryByRole } = render(
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityState={{ expanded: true }}
-        />
+      render(
+        <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: true }} />,
       );
 
-      expect(getByRole('button', { expanded: true })).toBeTruthy();
-      expect(queryByRole('button', { expanded: false })).toBe(null);
+      expect(screen.getByRole('button', { expanded: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { expanded: false })).toBe(null);
     });
 
     test('returns the correct element when only one matches all the requirements', () => {
-      const { getByRole } = render(
+      render(
         <>
           <TouchableOpacity
             testID="correct"
@@ -551,48 +667,68 @@ describe('supports accessibility states', () => {
           <TouchableOpacity testID="wrong" accessibilityRole="button">
             <Text>Save</Text>
           </TouchableOpacity>
-        </>
+        </>,
       );
 
       expect(
-        getByRole('button', { name: 'Save', expanded: true }).props.testID
+        screen.getByRole('button', {
+          name: 'Save',
+          expanded: true,
+        }).props.testID,
       ).toBe('correct');
     });
 
     test('does not return return as non expanded an element with expanded: undefined', () => {
-      const { queryByRole } = render(
-        <TouchableOpacity accessibilityRole="button"></TouchableOpacity>
-      );
+      render(<TouchableOpacity accessibilityRole="button"></TouchableOpacity>);
 
-      expect(queryByRole('button', { expanded: false })).toBe(null);
+      expect(screen.queryByRole('button', { expanded: false })).toBe(null);
     });
 
     test('returns an explicitly non expanded element', () => {
-      const { getByRole, queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ expanded: false }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(getByRole('button', { expanded: false })).toBeTruthy();
-      expect(queryByRole('button', { expanded: true })).toBe(null);
+      expect(screen.getByRole('button', { expanded: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { expanded: true })).toBe(null);
     });
 
     test('does not return expanded elements when querying for non expanded', () => {
-      const { queryByRole } = render(
+      render(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityState={{ expanded: true }}
-        ></TouchableOpacity>
+        ></TouchableOpacity>,
       );
 
-      expect(queryByRole('button', { expanded: false })).toBe(null);
+      expect(screen.queryByRole('button', { expanded: false })).toBe(null);
+    });
+
+    test('supports aria-expanded={true} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-expanded={true} />);
+      expect(screen.getByRole('button', { expanded: true })).toBeTruthy();
+      expect(screen.queryByRole('button', { expanded: false })).toBeNull();
+    });
+
+    test('supports aria-expanded={false} prop', () => {
+      render(<View accessible accessibilityRole="button" aria-expanded={false} />);
+      expect(screen.getByRole('button', { expanded: false })).toBeTruthy();
+      expect(screen.queryByRole('button', { expanded: true })).toBeNull();
+    });
+
+    test('supports default aria-expanded prop', () => {
+      render(<View accessible accessibilityRole="button" />);
+      expect(screen.getByRole('button')).toBeTruthy();
+      expect(screen.queryByRole('button', { expanded: true })).toBeNull();
+      expect(screen.queryByRole('button', { expanded: false })).toBeNull();
     });
   });
 
   test('ignores non queried accessibilityState', () => {
-    const { getByRole, queryByRole } = render(
+    render(
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityState={{
@@ -602,27 +738,27 @@ describe('supports accessibility states', () => {
         }}
       >
         <Text>Save</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>,
     );
 
     expect(
-      getByRole('button', {
+      screen.getByRole('button', {
         name: 'Save',
         disabled: true,
-      })
+      }),
     ).toBeTruthy();
     expect(
-      queryByRole('button', {
+      screen.queryByRole('button', {
         name: 'Save',
         disabled: false,
-      })
+      }),
     ).toBe(null);
   });
 
   test('matches an element combining all the options', () => {
-    const { getByRole } = render(
+    render(
       <TouchableOpacity
-        accessibilityRole="button"
+        accessibilityRole="checkbox"
         accessibilityState={{
           disabled: true,
           selected: true,
@@ -632,94 +768,92 @@ describe('supports accessibility states', () => {
         }}
       >
         <Text>Save</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>,
     );
 
     expect(
-      getByRole('button', {
+      screen.getByRole('checkbox', {
         name: 'Save',
         disabled: true,
         selected: true,
         checked: true,
         busy: true,
         expanded: true,
-      })
+      }),
     ).toBeTruthy();
   });
 });
 
 describe('error messages', () => {
   test('gives a descriptive error message when querying with a role', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() => getByRole('button')).toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "button"
+    expect(() => screen.getByRole('button')).toThrowErrorMatchingInlineSnapshot(`
+      "Unable to find an element with role: button
 
       <View />"
     `);
   });
 
   test('gives a descriptive error message when querying with a role and a name', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() => getByRole('button', { name: 'Save' }))
-      .toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "button", name: "Save"
+    expect(() => screen.getByRole('button', { name: 'Save' })).toThrowErrorMatchingInlineSnapshot(`
+      "Unable to find an element with role: button, name: Save
 
       <View />"
     `);
   });
 
   test('gives a descriptive error message when querying with a role, a name and accessibility state', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() => getByRole('button', { name: 'Save', disabled: true }))
+    expect(() => screen.getByRole('button', { name: 'Save', disabled: true }))
       .toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "button", name: "Save", disabled state: true
+      "Unable to find an element with role: button, name: Save, disabled state: true
 
       <View />"
     `);
   });
 
   test('gives a descriptive error message when querying with a role, a name and several accessibility state', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() =>
-      getByRole('button', { name: 'Save', disabled: true, selected: true })
-    ).toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "button", name: "Save", disabled state: true, selected state: true
+    expect(() => screen.getByRole('button', { name: 'Save', disabled: true, selected: true }))
+      .toThrowErrorMatchingInlineSnapshot(`
+      "Unable to find an element with role: button, name: Save, disabled state: true, selected state: true
 
       <View />"
     `);
   });
 
   test('gives a descriptive error message when querying with a role and an accessibility state', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() => getByRole('button', { disabled: true }))
+    expect(() => screen.getByRole('button', { disabled: true }))
       .toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "button", disabled state: true
+      "Unable to find an element with role: button, disabled state: true
 
       <View />"
     `);
   });
 
   test('gives a descriptive error message when querying with a role and an accessibility value', () => {
-    const { getByRole } = render(<View />);
+    render(<View />);
 
-    expect(() => getByRole('adjustable', { value: { min: 1 } }))
+    expect(() => screen.getByRole('adjustable', { value: { min: 1 } }))
       .toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "adjustable", min value: 1
+      "Unable to find an element with role: adjustable, min value: 1
 
       <View />"
     `);
 
     expect(() =>
-      getByRole('adjustable', {
+      screen.getByRole('adjustable', {
         value: { min: 1, max: 2, now: 1, text: /hello/ },
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(`
-      "Unable to find an element with role: "adjustable", min value: 1, max value: 2, now value: 1, text value: /hello/
+      "Unable to find an element with role: adjustable, min value: 1, max value: 2, now value: 1, text value: /hello/
 
       <View />"
     `);
@@ -727,22 +861,23 @@ describe('error messages', () => {
 });
 
 test('byRole queries support hidden option', () => {
-  const { getByRole, queryByRole } = render(
+  render(
     <Pressable accessibilityRole="button" style={{ display: 'none' }}>
       <Text>Hidden from accessibility</Text>
-    </Pressable>
+    </Pressable>,
   );
 
-  expect(getByRole('button', { includeHiddenElements: true })).toBeTruthy();
+  expect(screen.getByRole('button', { includeHiddenElements: true })).toBeTruthy();
 
-  expect(queryByRole('button')).toBeFalsy();
-  expect(queryByRole('button', { includeHiddenElements: false })).toBeFalsy();
-  expect(() => getByRole('button', { includeHiddenElements: false }))
+  expect(screen.queryByRole('button')).toBeFalsy();
+  expect(screen.queryByRole('button', { includeHiddenElements: false })).toBeFalsy();
+  expect(() => screen.getByRole('button', { includeHiddenElements: false }))
     .toThrowErrorMatchingInlineSnapshot(`
-    "Unable to find an element with role: "button"
+    "Unable to find an element with role: button
 
     <View
       accessibilityRole="button"
+      accessible={true}
       style={
         {
           "display": "none",
@@ -758,64 +893,62 @@ test('byRole queries support hidden option', () => {
 
 describe('matches only accessible elements', () => {
   test('matches elements with accessible={true}', () => {
-    const { queryByRole } = render(
+    render(
       <View accessibilityRole="menu" accessible={true}>
         <Text>Action</Text>
-      </View>
+      </View>,
     );
-    expect(queryByRole('menu', { name: 'Action' })).toBeTruthy();
+    expect(screen.queryByRole('menu', { name: 'Action' })).toBeTruthy();
   });
 
   test('ignores elements with accessible={false}', () => {
-    const { queryByRole } = render(
+    render(
       <Pressable accessibilityRole="button" accessible={false}>
         <Text>Action</Text>
-      </Pressable>
+      </Pressable>,
     );
-    expect(queryByRole('button', { name: 'Action' })).toBeFalsy();
+    expect(screen.queryByRole('button', { name: 'Action' })).toBeFalsy();
   });
 
-  test('ignores elements with accessible={undefined} and that are implicitely not accessible', () => {
-    const { queryByRole } = render(
+  test('ignores elements with accessible={undefined} and that are implicitly not accessible', () => {
+    render(
       <View accessibilityRole="menu">
         <Text>Action</Text>
-      </View>
+      </View>,
     );
-    expect(queryByRole('menu', { name: 'Action' })).toBeFalsy();
+    expect(screen.queryByRole('menu', { name: 'Action' })).toBeFalsy();
   });
 });
 
 test('error message renders the element tree, preserving only helpful props', async () => {
-  const view = render(<View accessibilityRole="button" key="3" />);
+  render(<View accessibilityRole="button" key="3" />);
 
-  expect(() => view.getByRole('link')).toThrowErrorMatchingInlineSnapshot(`
-    "Unable to find an element with role: "link"
-
-    <View
-      accessibilityRole="button"
-    />"
-  `);
-
-  expect(() => view.getAllByRole('link')).toThrowErrorMatchingInlineSnapshot(`
-    "Unable to find an element with role: "link"
+  expect(() => screen.getByRole('link')).toThrowErrorMatchingInlineSnapshot(`
+    "Unable to find an element with role: link
 
     <View
       accessibilityRole="button"
     />"
   `);
 
-  await expect(view.findByRole('link')).rejects
-    .toThrowErrorMatchingInlineSnapshot(`
-    "Unable to find an element with role: "link"
+  expect(() => screen.getAllByRole('link')).toThrowErrorMatchingInlineSnapshot(`
+    "Unable to find an element with role: link
 
     <View
       accessibilityRole="button"
     />"
   `);
 
-  await expect(view.findAllByRole('link')).rejects
-    .toThrowErrorMatchingInlineSnapshot(`
-    "Unable to find an element with role: "link"
+  await expect(screen.findByRole('link')).rejects.toThrowErrorMatchingInlineSnapshot(`
+    "Unable to find an element with role: link
+
+    <View
+      accessibilityRole="button"
+    />"
+  `);
+
+  await expect(screen.findAllByRole('link')).rejects.toThrowErrorMatchingInlineSnapshot(`
+    "Unable to find an element with role: link
 
     <View
       accessibilityRole="button"

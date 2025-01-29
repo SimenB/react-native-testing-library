@@ -1,81 +1,94 @@
-import type { ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
 import * as React from 'react';
-import { Profiler } from 'react';
+import type {
+  ReactTestInstance,
+  ReactTestRenderer,
+  TestRendererOptions,
+} from 'react-test-renderer';
+
 import act from './act';
 import { addToCleanupQueue } from './cleanup';
 import { getConfig } from './config';
-import { getHostChildren } from './helpers/component-tree';
-import debugDeep, { DebugOptions } from './helpers/debugDeep';
-import debugShallow from './helpers/debugShallow';
-import { configureHostComponentNamesIfNeeded } from './helpers/host-component-names';
-import { validateStringsRenderedWithinText } from './helpers/stringValidation';
+import { getHostSelves } from './helpers/component-tree';
+import type { DebugOptions } from './helpers/debug';
+import { debug } from './helpers/debug';
+import { validateStringsRenderedWithinText } from './helpers/string-validation';
 import { renderWithAct } from './render-act';
-import { setRenderResult, screen } from './screen';
+import { setRenderResult } from './screen';
 import { getQueriesForElement } from './within';
 
-export type RenderOptions = {
+export interface RenderOptions {
+  /**
+   * Pass a React Component as the wrapper option to have it rendered around the inner element. This is most useful for creating
+   * reusable custom render functions for common data providers.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   wrapper?: React.ComponentType<any>;
-  createNodeMock?: (element: React.ReactElement) => any;
+
+  /**
+   * Set to `false` to disable concurrent rendering.
+   * Otherwise `render` will default to concurrent rendering.
+   */
+  concurrentRoot?: boolean;
+
+  createNodeMock?: (element: React.ReactElement) => unknown;
   unstable_validateStringsRenderedWithinText?: boolean;
-};
+}
 
 export type RenderResult = ReturnType<typeof render>;
 
 /**
- * Renders test component deeply using react-test-renderer and exposes helpers
+ * Renders test component deeply using React Test Renderer and exposes helpers
  * to assert on the output.
  */
-export default function render<T>(
-  component: React.ReactElement<T>,
-  {
+export default function render<T>(component: React.ReactElement<T>, options: RenderOptions = {}) {
+  return renderInternal(component, options);
+}
+
+export function renderInternal<T>(component: React.ReactElement<T>, options?: RenderOptions) {
+  const {
     wrapper: Wrapper,
-    createNodeMock,
+    concurrentRoot,
     unstable_validateStringsRenderedWithinText,
-  }: RenderOptions = {}
-) {
-  configureHostComponentNamesIfNeeded();
+    ...rest
+  } = options || {};
+
+  const testRendererOptions: TestRendererOptions = {
+    ...rest,
+    // @ts-expect-error incomplete typing on RTR package
+    unstable_isConcurrent: concurrentRoot ?? getConfig().concurrentRoot,
+  };
 
   if (unstable_validateStringsRenderedWithinText) {
     return renderWithStringValidation(component, {
       wrapper: Wrapper,
-      createNodeMock,
+      ...testRendererOptions,
     });
   }
 
-  const wrap = (element: React.ReactElement) =>
-    Wrapper ? <Wrapper>{element}</Wrapper> : element;
-
-  const renderer = renderWithAct(
-    wrap(component),
-    createNodeMock ? { createNodeMock } : undefined
-  );
-
+  const wrap = (element: React.ReactElement) => (Wrapper ? <Wrapper>{element}</Wrapper> : element);
+  const renderer = renderWithAct(wrap(component), testRendererOptions);
   return buildRenderResult(renderer, wrap);
 }
 
 function renderWithStringValidation<T>(
   component: React.ReactElement<T>,
-  {
-    wrapper: Wrapper,
-    createNodeMock,
-  }: Omit<RenderOptions, 'unstable_validateStringsRenderedWithinText'> = {}
+  options: Omit<RenderOptions, 'unstable_validateStringsRenderedWithinText'> = {},
 ) {
-  const handleRender: React.ProfilerProps['onRender'] = (_, phase) => {
-    if (phase === 'update') {
-      validateStringsRenderedWithinText(screen.toJSON());
+  const { wrapper: Wrapper, ...testRendererOptions } = options ?? {};
+
+  const wrap = (element: React.ReactElement) => (
+    <React.Profiler id="renderProfiler" onRender={handleRender}>
+      {Wrapper ? <Wrapper>{element}</Wrapper> : element}
+    </React.Profiler>
+  );
+
+  const handleRender: React.ProfilerOnRenderCallback = (_, phase) => {
+    if (renderer && phase === 'update') {
+      validateStringsRenderedWithinText(renderer.toJSON());
     }
   };
 
-  const wrap = (element: React.ReactElement) => (
-    <Profiler id="renderProfiler" onRender={handleRender}>
-      {Wrapper ? <Wrapper>{element}</Wrapper> : element}
-    </Profiler>
-  );
-
-  const renderer = renderWithAct(
-    wrap(component),
-    createNodeMock ? { createNodeMock } : undefined
-  );
+  const renderer: ReactTestRenderer = renderWithAct(wrap(component), testRendererOptions);
   validateStringsRenderedWithinText(renderer.toJSON());
 
   return buildRenderResult(renderer, wrap);
@@ -83,13 +96,13 @@ function renderWithStringValidation<T>(
 
 function buildRenderResult(
   renderer: ReactTestRenderer,
-  wrap: (element: React.ReactElement) => JSX.Element
+  wrap: (element: React.ReactElement) => JSX.Element,
 ) {
   const update = updateWithAct(renderer, wrap);
   const instance = renderer.root;
 
   const unmount = () => {
-    act(() => {
+    void act(() => {
       renderer.unmount();
     });
   };
@@ -102,9 +115,9 @@ function buildRenderResult(
     unmount,
     rerender: update, // alias for `update`
     toJSON: renderer.toJSON,
-    debug: debug(instance, renderer),
-    get root() {
-      return getHostChildren(instance)[0];
+    debug: makeDebug(renderer),
+    get root(): ReactTestInstance {
+      return getHostSelves(instance)[0];
     },
     UNSAFE_root: instance,
   };
@@ -116,54 +129,37 @@ function buildRenderResult(
     get() {
       throw new Error(
         "'container' property has been renamed to 'UNSAFE_root'.\n\n" +
-          "Consider using 'root' property which returns root host element."
+          "Consider using 'root' property which returns root host element.",
       );
     },
   });
 
   setRenderResult(result);
+
   return result;
 }
 
 function updateWithAct(
   renderer: ReactTestRenderer,
-  wrap: (innerElement: React.ReactElement) => React.ReactElement
+  wrap: (innerElement: React.ReactElement) => React.ReactElement,
 ) {
   return function (component: React.ReactElement) {
-    act(() => {
+    void act(() => {
       renderer.update(wrap(component));
     });
   };
 }
 
-interface DebugFunction {
-  (options?: DebugOptions | string): void;
-  shallow: (message?: string) => void;
-}
+export type DebugFunction = (options?: DebugOptions) => void;
 
-function debug(
-  instance: ReactTestInstance,
-  renderer: ReactTestRenderer
-): DebugFunction {
-  function debugImpl(options?: DebugOptions | string) {
+function makeDebug(renderer: ReactTestRenderer): DebugFunction {
+  function debugImpl(options?: DebugOptions) {
     const { defaultDebugOptions } = getConfig();
-    const debugOptions =
-      typeof options === 'string'
-        ? { ...defaultDebugOptions, message: options }
-        : { ...defaultDebugOptions, ...options };
-
-    if (typeof options === 'string') {
-      // eslint-disable-next-line no-console
-      console.warn(
-        'Using debug("message") is deprecated and will be removed in future release, please use debug({ message; "message" }) instead.'
-      );
-    }
-
+    const debugOptions = { ...defaultDebugOptions, ...options };
     const json = renderer.toJSON();
     if (json) {
-      return debugDeep(json, debugOptions);
+      return debug(json, debugOptions);
     }
   }
-  debugImpl.shallow = (message?: string) => debugShallow(instance, message);
   return debugImpl;
 }

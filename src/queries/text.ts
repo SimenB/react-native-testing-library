@@ -1,10 +1,9 @@
 import type { ReactTestInstance } from 'react-test-renderer';
-import { filterNodeByType } from '../helpers/filterNodeByType';
-import { findAll } from '../helpers/findAll';
-import { getHostComponentNames } from '../helpers/host-component-names';
-import { matchTextContent } from '../helpers/matchers/matchTextContent';
-import { TextMatch, TextMatchOptions } from '../matches';
-import { makeQueries } from './makeQueries';
+
+import { findAll } from '../helpers/find-all';
+import { isHostText } from '../helpers/host-component-names';
+import { matchTextContent } from '../helpers/matchers/match-text-content';
+import type { TextMatch, TextMatchOptions } from '../matches';
 import type {
   FindAllByQuery,
   FindByQuery,
@@ -12,37 +11,28 @@ import type {
   GetByQuery,
   QueryAllByQuery,
   QueryByQuery,
-} from './makeQueries';
+} from './make-queries';
+import { makeQueries } from './make-queries';
 import type { CommonQueryOptions } from './options';
 
 type ByTextOptions = CommonQueryOptions & TextMatchOptions;
 
-const queryAllByText = (
-  instance: ReactTestInstance
-): ((text: TextMatch, options?: ByTextOptions) => Array<ReactTestInstance>) =>
+const queryAllByText = (instance: ReactTestInstance): QueryAllByQuery<TextMatch, ByTextOptions> =>
   function queryAllByTextFn(text, options = {}) {
-    return findAll(
-      instance,
-      (node) =>
-        filterNodeByType(node, getHostComponentNames().text) &&
-        matchTextContent(node, text, options),
-      {
-        ...options,
-        matchDeepestOnly: true,
-      }
-    );
+    return findAll(instance, (node) => isHostText(node) && matchTextContent(node, text, options), {
+      ...options,
+      matchDeepestOnly: true,
+    });
   };
 
-const getMultipleError = (text: TextMatch) =>
-  `Found multiple elements with text: ${String(text)}`;
+const getMultipleError = (text: TextMatch) => `Found multiple elements with text: ${String(text)}`;
 
-const getMissingError = (text: TextMatch) =>
-  `Unable to find an element with text: ${String(text)}`;
+const getMissingError = (text: TextMatch) => `Unable to find an element with text: ${String(text)}`;
 
 const { getBy, getAllBy, queryBy, queryAllBy, findBy, findAllBy } = makeQueries(
   queryAllByText,
   getMissingError,
-  getMultipleError
+  getMultipleError,
 );
 
 export type ByTextQueries = {
@@ -54,9 +44,7 @@ export type ByTextQueries = {
   findAllByText: FindAllByQuery<TextMatch, ByTextOptions>;
 };
 
-export const bindByTextQueries = (
-  instance: ReactTestInstance
-): ByTextQueries => ({
+export const bindByTextQueries = (instance: ReactTestInstance): ByTextQueries => ({
   getByText: getBy(instance),
   getAllByText: getAllBy(instance),
   queryByText: queryBy(instance),
