@@ -1852,7 +1852,7 @@ await render(
 await fireEvent(screen.getByPlaceholderText('my placeholder'), 'blur');
 ```
 
-FireEvent exposes convenience methods for common events like: `press`, `changeText`, `scroll`.
+FireEvent exposes convenience methods for common events like: `press`, `changeText`, `scroll`, `layout`.
 
 ### `fireEvent.press` \{#press}
 
@@ -1961,6 +1961,34 @@ await render(
 );
 
 await fireEvent.scroll(screen.getByTestId('scroll-view'), eventData);
+```
+
+### `fireEvent.layout` \{#layout}
+
+:::note
+Available since React Native Testing Library 14.1.0.
+:::
+
+```tsx
+fireEvent.layout: (
+  instance: TestInstance,
+  layout?: Partial<{ x: number; y: number; width: number; height: number }>,
+) => Promise<void>
+```
+
+Builds a layout event carrying the given `layout` rectangle and invokes the `layout` handler on the element or nearest eligible parent. Use it to simulate the layout engine measuring an element, e.g. to test components that adapt to a measured size.
+
+The `layout` values are merged onto a zeroed rectangle (`{ x: 0, y: 0, width: 0, height: 0 }`), so pass only the fields your component reads.
+
+```jsx
+import { View } from 'react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
+
+const onLayoutMock = jest.fn();
+
+await render(<View testID="box" onLayout={onLayoutMock} />);
+
+await fireEvent.layout(screen.getByTestId('box'), { width: 320, height: 80 });
 ```
 
 
@@ -2265,6 +2293,64 @@ The sequence of events depends on whether the scroll includes an optional moment
 - `momentumScrollBegin`
 - `scroll` (multiple events)
 - `momentumScrollEnd`
+
+## `pullToRefresh()` \{#pull-to-refresh}
+
+:::note
+Available since React Native Testing Library 14.1.0.
+:::
+
+```ts
+pullToRefresh(
+  instance: TestInstance,
+): Promise<void>
+```
+
+Example
+
+```ts
+const user = userEvent.setup();
+await user.pullToRefresh(scrollView);
+```
+
+Simulates a user performing the pull-to-refresh gesture on a host `ScrollView` element, invoking the `onRefresh` handler of its `refreshControl` prop.
+
+This function supports only host `ScrollView` elements, passing other element types will result in an error. Note that `FlatList` and `SectionList` are accepted as they render to a host `ScrollView` element.
+
+If the element has no `refreshControl` prop, or its `RefreshControl` has no `onRefresh` handler, the call resolves without doing anything.
+
+## `accessibilityAction()`
+
+:::note
+Available since React Native Testing Library 14.1.0.
+:::
+
+```ts
+accessibilityAction(
+  instance: TestInstance,
+  actionName: string,
+): Promise<void>
+```
+
+Example
+
+```ts
+const user = userEvent.setup();
+await user.accessibilityAction(slider, 'increment');
+```
+
+Simulates an assistive technology (e.g. a screen reader) triggering the named accessibility action on a given element, invoking its `onAccessibilityAction` handler.
+
+The `actionName` autocompletes the [standard React Native actions](https://reactnative.dev/docs/accessibility#accessibility-actions) (`activate`, `increment`, `decrement`, `longpress`, `magicTap`, `escape`, `expand`, `collapse`), but any custom action name is accepted.
+
+Just like a real assistive technology, the action must be reachable by the user, otherwise an error is thrown:
+
+- the action must be declared in the element's `accessibilityActions` prop,
+- the element must not be disabled (via `aria-disabled` or `accessibilityState={{ disabled: true }}`).
+
+### Sequence of events
+
+- `accessibilityAction`
 
 
 

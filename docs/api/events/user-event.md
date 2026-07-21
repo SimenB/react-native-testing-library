@@ -294,3 +294,61 @@ The sequence of events depends on whether the scroll includes an optional moment
 - `momentumScrollBegin`
 - `scroll` (multiple events)
 - `momentumScrollEnd`
+
+## `pullToRefresh()` \{#pull-to-refresh}
+
+:::note
+Available since React Native Testing Library 14.1.0.
+:::
+
+```ts
+pullToRefresh(
+  instance: TestInstance,
+): Promise<void>
+```
+
+Example
+
+```ts
+const user = userEvent.setup();
+await user.pullToRefresh(scrollView);
+```
+
+Simulates a user performing the pull-to-refresh gesture on a host `ScrollView` element, invoking the `onRefresh` handler of its `refreshControl` prop.
+
+This function supports only host `ScrollView` elements, passing other element types will result in an error. Note that `FlatList` and `SectionList` are accepted as they render to a host `ScrollView` element.
+
+If the element has no `refreshControl` prop, or its `RefreshControl` has no `onRefresh` handler, the call resolves without doing anything.
+
+## `accessibilityAction()`
+
+:::note
+Available since React Native Testing Library 14.1.0.
+:::
+
+```ts
+accessibilityAction(
+  instance: TestInstance,
+  actionName: string,
+): Promise<void>
+```
+
+Example
+
+```ts
+const user = userEvent.setup();
+await user.accessibilityAction(slider, 'increment');
+```
+
+Simulates an assistive technology (e.g. a screen reader) triggering the named accessibility action on a given element, invoking its `onAccessibilityAction` handler.
+
+The `actionName` autocompletes the [standard React Native actions](https://reactnative.dev/docs/accessibility#accessibility-actions) (`activate`, `increment`, `decrement`, `longpress`, `magicTap`, `escape`, `expand`, `collapse`), but any custom action name is accepted.
+
+Just like a real assistive technology, the action must be reachable by the user, otherwise an error is thrown:
+
+- the action must be declared in the element's `accessibilityActions` prop,
+- the element must not be disabled (via `aria-disabled` or `accessibilityState={{ disabled: true }}`).
+
+### Sequence of events
+
+- `accessibilityAction`
