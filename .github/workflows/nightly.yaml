@@ -1,8 +1,12 @@
 name: Nightly - React Native Checks
 on:
-  # Runs every night at 4 AM
+  # Runs every night at 6 AM UTC.
+  # Note: RN nightlies are published between ~03:30 and ~04:50 UTC, and the individual
+  # `@react-native/*` packages land minutes apart. Resolving inside that window picks up a
+  # partially published nightly (e.g. `babel-preset` bumped, `codegen` not yet on the registry),
+  # which fails as "No candidates found". Keep this comfortably after the publish window.
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 # Set minimal permissions by default

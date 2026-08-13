@@ -1,8 +1,9 @@
 name: Nightly v13 - React Native Checks
 on:
-  # Runs every night at 4 AM
+  # Runs every night at 6 AM UTC, after the RN nightly publish window (~03:30-04:50 UTC).
+  # See the note in `nightly.yaml` for why resolving during that window breaks.
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 # Set minimal permissions by default
